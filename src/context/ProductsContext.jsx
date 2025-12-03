@@ -7,6 +7,12 @@ export const ProductsProvider = ({ children }) => {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
+  // Función para convertir números argentinos (la misma que en CartContext)
+  const convertirNumeroArgentino = (v) => {
+    const texto = String(v || 0);
+    return Number(texto.replace(/\./g, '').replace(',', '.')) || 0;
+  };
+
   // Valida el Producto
   const validarProducto = (producto) => {
     const errores = {};
@@ -16,19 +22,22 @@ export const ProductsProvider = ({ children }) => {
       errores.nombre = 'El nombre es obligatorio.';
     }
 
-    // precio
+    // precio - usando la función de conversión
     if (!producto.precio?.toString().trim()) {
       errores.precio = 'El precio es obligatorio.';
     } else {
-      const precioLimpio = producto.precio.toString().replace(/\./g, '').replace(',', '.');
-      const precioNumerico = parseFloat(precioLimpio);
-     
-      if (!/^[\d.,]+$/.test(producto.precio.toString().replace(/\./g, ''))) {
-        errores.precio = 'Solo números, puntos o comas.';
-      } else if (isNaN(precioNumerico)) {
-        errores.precio = 'Precio no válido.';
-      } else if (precioNumerico <= 0) {
-        errores.precio = 'Debe ser mayor a 0.';
+      try {
+        const precioNumerico = convertirNumeroArgentino(producto.precio);
+        
+        if (!/^[\d.,]+$/.test(producto.precio.toString().replace(/\./g, ''))) {
+          errores.precio = 'Solo números, puntos o comas.';
+        } else if (isNaN(precioNumerico)) {
+          errores.precio = 'Precio no válido.';
+        } else if (precioNumerico <= 0) {
+          errores.precio = 'Debe ser mayor a 0.';
+        }
+      } catch (error) {
+        errores.precio = 'Formato de precio inválido.';
       }
     }
 
@@ -53,6 +62,7 @@ export const ProductsProvider = ({ children }) => {
     };
   };
 
+  // ... resto del código (useEffect, agregarProducto, editarProducto) se mantiene igual
   useEffect(() => {
     const cargarProductos = async () => {
       try {
@@ -121,7 +131,8 @@ export const ProductsProvider = ({ children }) => {
         agregarProducto,
         editarProducto,
         validarProducto,
-        validar
+        validar,
+        convertirNumeroArgentino // Exportamos la función también si es necesario
       }}>
       {children}
     </ProductsContext.Provider>
@@ -136,5 +147,3 @@ export const useProducts = () => {
   }
   return context;
 };
-
-
