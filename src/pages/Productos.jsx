@@ -1,5 +1,4 @@
 import { Link, useNavigate } from "react-router-dom";
-import CarritoCompras from "./Carrito";
 import { useCartContext } from "../context/CartContext";
 import { useAuthContext } from "../context/AuthContext";
 import { useProducts } from "../context/ProductsContext";
@@ -7,14 +6,13 @@ import { useState, useEffect } from "react";
 
 export default function Productos() {
   const { productos, cargando, error } = useProducts();
-  const { agregarAlCarrito } = useCartContext();
+  const { agregarAlCarrito, formatearNumeroArgentino } = useCartContext(); // Importa la función
   const { esAdmin } = useAuthContext();
   const navigate = useNavigate();
 
   const [busqueda, setBusqueda] = useState("");
   const [paginaActual, setPaginaActual] = useState(1); 
-
-   const productosPorPagina = 3; // Cantidad de productos a mostrar por página
+  const productosPorPagina = 3;
 
   const manejarEliminar = (producto) => {
     navigate('/eliminar-producto', { state: { producto } });
@@ -25,20 +23,17 @@ export default function Productos() {
   };
 
   const productosFiltrados = productos.filter((producto) =>
-    producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) || (producto.categoria && producto.categoria.toLowerCase().includes(busqueda.toLowerCase())
-)
+    producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
+    (producto.categoria && producto.categoria.toLowerCase().includes(busqueda.toLowerCase()))
   );
 
   const indiceUltimoProducto = paginaActual * productosPorPagina;
   const indicePrimerProducto = indiceUltimoProducto - productosPorPagina;
   const productosActuales = productosFiltrados.slice(indicePrimerProducto, indiceUltimoProducto);
  
-  // Cambiar de página
   const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
   const cambiarPagina = (numeroPagina) => setPaginaActual(numeroPagina);
 
-
-  // Resetear a página 1 con búsquedas
   const manejarBusqueda = (e) => {
     setBusqueda(e.target.value);
     setPaginaActual(1);
@@ -77,17 +72,15 @@ export default function Productos() {
       document.head.appendChild(canonical);
     }
     canonical.href = window.location.origin + '/productos';
-
   }, []);
-
 
   if (cargando) return <p>Cargando productos...</p>;
   if (error) return <p>{error}</p>;
 
-return (
+  return (
     <>
       <header className="container mt-4">
-        <h1 className="display-5 fw-bold">Tienda de Juegos de Mesa</h1>
+        <h1 className="display-5 fw-bold">Juegos de Mesa | Tienda</h1>
         <p className="lead text-muted">Filtra por nombre o categoría para encontrar el juego que buscas.</p>
       </header>
 
@@ -111,7 +104,6 @@ return (
           </div>
         </div>
 
-
         {/* Grid de productos */}
         <div className="row">
           {productosActuales.map((producto) => (
@@ -129,8 +121,9 @@ return (
                   <p className="card-text flex-grow-1">
                     {producto.descripcion}
                   </p>
+                  {/* Precio formateado */}
                   <p className="card-text fw-bold text-primary">
-                    ${producto.precio}
+                    ${formatearNumeroArgentino(producto.precio)} {/* Formateado aquí */}
                   </p>
                  
                   <div className="mt-auto">
@@ -150,7 +143,6 @@ return (
                         Agregar al carrito
                       </button>
                     </div>
-
 
                     {/* Botones de admin */}
                     {esAdmin && (
@@ -178,7 +170,6 @@ return (
           ))}
         </div>
 
-
         {/* Paginador */}
         {productosFiltrados.length > productosPorPagina && (
           <div className="d-flex justify-content-center my-4">
@@ -193,7 +184,6 @@ return (
             ))}
           </div>
         )}
-
 
         {/* Información de la página actual */}  
         {productosFiltrados.length > 0 && (
