@@ -1,100 +1,203 @@
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from '../context/AuthContext';
-import { useCartContext } from '../context/CartContext';
-
+import { useAuthContext } from "../context/AuthContext";
+import { useCartContext } from "../context/CartContext";
 
 export default function Pagar() {
   const { usuario, cerrarSesion } = useAuthContext();
-  const { carrito, total, vaciarCarrito } = useCartContext();
+  const {
+    carrito,
+    totalFormateado,
+    vaciarCarrito,
+    formatearNumeroArgentino,
+    obtenerSubtotalItemFormateado,
+    agregarCantidad,
+    quitarCantidad,
+  } = useCartContext();
   const navigate = useNavigate();
 
-
-  const tokenActual = localStorage.getItem('authToken');
-
+  const tokenActual = localStorage.getItem("authToken");
 
   // Función para finalizar compra
   const comprar = () => {
     alert("¡Compra realizada con éxito!");
-    vaciarCarrito(); // Limpiar carrito después de comprar
+    vaciarCarrito();
     navigate("/productos");
   };
-
 
   return (
     <>
       {/* Info del usuario */}
-      <div>
+      <div className="container mt-4 p-4 bg-light rounded">
         <h2>Hola {usuario.nombre}</h2>
-        <p>Email: {usuario.email}</p>
-       
+        <p className="mb-2">Email: {usuario.email}</p>
+
         {/* Estilo para el Token */}
-        <div style={{
-          background: '#f0f0f0',
-          padding: '8px',
-          borderRadius: '4px',
-          margin: '10px 0',
-          fontSize: '12px',
-          wordBreak: 'break-all'
-        }}>
+        <div
+          style={{
+            background: "#f0f0f0",
+            padding: "8px",
+            borderRadius: "4px",
+            margin: "10px 0",
+            fontSize: "12px",
+            wordBreak: "break-all",
+          }}
+        >
           <strong>Token:</strong> {tokenActual}
         </div>
-        <button onClick={cerrarSesion}>Cerrar sesión</button>
+        <button onClick={cerrarSesion} className="btn btn-secondary btn-sm">
+          Cerrar sesión
+        </button>
         <hr />
       </div>
 
-
       {/* Carrito */}
-      <div className="p-5">
-        <h2 className="mb-4">Tu compra:</h2>
-
+      <div className="container mt-4 p-4">
+        <h2 className="mb-4 text-center">Tu compra:</h2>
 
         {carrito.length > 0 ? (
           <>
-            {carrito.map((producto) => {
-              const cantidad = Number(producto.cantidad || 1);
-              const precioUnitario = Number(producto.precio || 0);
-              const subtotal = cantidad * precioUnitario;
-              return (
-                <div key={producto.id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <img src={producto.avatar} alt={producto.nombre} width="100"
- />
-                  <div>
-                    <div className="fs-5 fw-bold text-success">{producto.nombre}</div>
-                    <div>Precio unidad: ${Number(precioUnitario).toFixed(3)}</div>
-                    <div className="border-bottom">Cantidad: {cantidad}</div>
-                    <div className="mb-4"><strong>Subtotal: ${Number(subtotal).toFixed(3)}</strong></div>
+            <div className="row">
+              {carrito.map((producto) => (
+                <div key={producto.id} className="col-12 mb-4">
+                  <div className="card">
+                    <div className="row g-0">
+                      {/* Imagen del producto */}
+                      <div className="col-md-3">
+                        <img
+                          src={producto.avatar}
+                          alt={producto.nombre}
+                          className="img-fluid rounded-start"
+                          style={{ height: "200px", objectFit: "cover" }}
+                        />
+                      </div>
+
+                      {/* Información del producto */}
+                      <div className="col-md-9">
+                        <div className="card-body">
+                          <h5 className="card-title text-primary">
+                            {producto.nombre}
+                          </h5>
+
+                          <div className="row mt-3">
+                            {/* Precio unitario */}
+                            <div className="col-md-4">
+                              <p className="mb-1">
+                                <strong>Precio unitario:</strong>
+                              </p>
+                              <p className="text-success fw-bold">
+                                ${formatearNumeroArgentino(producto.precio)}
+                              </p>
+                            </div>
+
+                            {/* Cantidad con controles */}
+                            <div className="col-md-4">
+                              <p className="mb-1">
+                                <strong>Cantidad:</strong>
+                              </p>
+                              <div className="d-flex align-items-center gap-2">
+                                <button
+                                  onClick={() => quitarCantidad(producto.id)}
+                                  className="btn btn-outline-secondary btn-sm"
+                                  style={{ width: "40px" }}
+                                >
+                                  -
+                                </button>
+                                
+                                <span className="badge bg-primary fs-6 px-3 py-2">
+                                  {producto.cantidad || 1}
+                                </span>
+                                
+                                <button
+                                  onClick={() => agregarCantidad(producto.id)}
+                                  className="btn btn-outline-secondary btn-sm"
+                                  style={{ width: "40px" }}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Subtotal */}
+                            <div className="col-md-4">
+                              <p className="mb-1">
+                                <strong>Subtotal:</strong>
+                              </p>
+                              <h6 className="text-dark fw-bold">
+                                ${obtenerSubtotalItemFormateado(producto)}
+                              </h6>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
-            <hr />
-            <h3 className="fs-4 fw-bold text-dark bg-light rounded-4 p-3 shadow-sm">Total a pagar: ${Number(total).toFixed(3)}</h3>
+              ))}
+            </div>
+
+            <hr className="my-4" />
+
+            {/* Total */}
+            <div className="text-center p-4 bg-light rounded shadow-sm">
+              <h3 className="fs-3 fw-bold text-dark mb-3">Total a pagar:</h3>
+              <div className="display-4 text-success fw-bold">
+                ${totalFormateado}
+              </div>
+            </div>
           </>
-
-
         ) : (
-          <p>No hay productos en el carrito</p>
+          <div className="text-center py-5">
+            <div className="alert alert-info">
+              <h4>No hay productos en el carrito</h4>
+              <p>
+                Agrega productos desde la tienda para continuar con tu compra
+              </p>
+            </div>
+          </div>
         )}
       </div>
-<div>
-        <button className="me-2" onClick={vaciarCarrito}>
-          Vaciar Carrito
-        </button>
-      </div>
 
+      {/* Botones de acción */}
+      <div className="container mt-4 mb-5">
+        <div className="d-flex flex-wrap gap-3 justify-content-center">
+          {carrito.length > 0 ? (
+            <>
+              <button
+                onClick={vaciarCarrito}
+                className="btn btn-outline-danger px-4"
+              >
+                <i className="bi bi-trash me-2"></i>
+                Vaciar Carrito
+              </button>
 
-      <div className="mt-2">
-        <button className="me-2" onClick={() => navigate("/productos")}>
-          {carrito.length > 0 ? "Seguir Comprando" : "Volver a Productos"}
-        </button>
-        {carrito.length > 0 && (
-          <button onClick={comprar}>
-            Confirmar y Pagar
-          </button>
-        )}
+              <button
+                onClick={() => navigate("/productos")}
+                className="btn btn-outline-primary px-4"
+              >
+                <i className="bi bi-cart-plus me-2"></i>
+                Seguir Comprando
+              </button>
+
+              <button
+                onClick={comprar}
+                className="btn btn-success px-4"
+                style={{ backgroundColor: "#556B2F", borderColor: "#556B2F" }}
+              >
+                <i className="bi bi-credit-card me-2"></i>
+                Confirmar y Pagar
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => navigate("/productos")}
+              className="btn btn-primary px-4"
+            >
+              <i className="bi bi-arrow-left me-2"></i>
+              Volver a Productos
+            </button>
+          )}
+        </div>
       </div>
     </>
   );
 }
-
-
